@@ -8,6 +8,7 @@ leftMenuBtnsSuper = (
                    {'key':'masterconfig',       'name':'主库地址配置',      'url':'/admin/sql/master_config/',      'class':'glyphicon glyphicon-user'},
                    {'key':'userconfig',         'name':'用户权限配置',       'url':'/admin/sql/users/',        'class':'glyphicon glyphicon-th-large'},
                    {'key':'workflowconfig',     'name':'所有工单管理',       'url':'/admin/sql/workflow/',        'class':'glyphicon glyphicon-list-alt'},
+                   {'key':'allBackupResult',    'name':'查看备份结果',       'url':'/allBackupResult/',        'class':'glyphicon glyphicon-floppy-disk'},
 )
 leftMenuBtnsDoc = (
                    {'key':'dbaprinciples',     'name':'SQL审核必读',       'url':'/dbaprinciples/',        'class':'glyphicon glyphicon-book'},

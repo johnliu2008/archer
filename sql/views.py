@@ -2,7 +2,7 @@
 
 import re
 import json
-import time
+import time, datetime
 import multiprocessing
 from collections import OrderedDict
 
@@ -19,7 +19,7 @@ from .const import Const
 from .sendmail import MailSender
 from .inception import InceptionDao
 from .aes_decryptor import Prpcrypt
-from .models import users, master_config, workflow
+from .models import users, master_config, workflow, backup_result
 
 dao = Dao()
 inceptionDao = InceptionDao()
@@ -371,3 +371,92 @@ def _getDetailUrl(request):
     scheme = request.scheme
     host = request.META['HTTP_HOST']
     return "%s://%s/detail/" % (scheme, host)
+
+#接收服务器传来的备份结果
+@csrf_exempt
+def backupAPI(request):
+    if request.method == 'POST':
+        received_json_data = json.loads(request.body.decode("utf-8"))
+        if "id" in received_json_data:
+            #比对客户端传来的校验值是否正确。这里只是简单地计算json串里面除["id"]之外的所有的value的字符串长度之和，与["id"]的value是否相等
+            checksum = received_json_data["id"]
+            received_json_data.pop("id")
+            string_temp = ''
+            for value in received_json_data.values():
+                string_temp += str(value)
+            if checksum == len(string_temp) and len(received_json_data) == 11:
+                new_backup_result = backup_result()
+                new_backup_result.hostname = received_json_data["hostname"]
+                new_backup_result.port = received_json_data["port"]
+                new_backup_result.dbname = received_json_data["dbname"]
+                new_backup_result.backup_tool = received_json_data["backup_tool"]
+                new_backup_result.backup_strategy = received_json_data["backup_strategy"]
+                new_backup_result.backup_result = received_json_data["backup_result"]
+                new_backup_result.start_time = datetime.datetime.strptime(received_json_data["start_time"], "%Y-%m-%dT%X")
+                new_backup_result.finish_time = datetime.datetime.strptime(received_json_data["finish_time"], "%Y-%m-%dT%X")
+                duration = (datetime.datetime.strptime(received_json_data["finish_time"], "%Y-%m-%dT%X") - datetime.datetime.strptime(received_json_data["start_time"], "%Y-%m-%dT%X")).__str__()
+                new_backup_result.duration = duration
+                new_backup_result.input_size = received_json_data["input_size"]
+                new_backup_result.output_size = received_json_data["output_size"]
+                new_backup_result.comments = received_json_data["comments"]
+                new_backup_result.save()
+                context = {'Msg': 'Completed!'}
+            else:
+                context = {'Msg': '非法请求'}
+        else:
+            context = {'Msg': '非法请求'}
+    else:
+        context = {'Msg': 'GET'}
+    return render(request, 'msg.html', context)
+
+#展示备份结果
+def allBackupResult(request):
+     #一个页面展示
+    PAGE_LIMIT = 12
+
+    pageNo = 0
+    hostname = ''
+
+    #参数检查
+    if 'pageNo' in request.GET:
+        pageNo = request.GET['pageNo']
+    else:
+        pageNo = '0'
+
+    if 'hostname' in request.GET:
+        hostname = request.GET['hostname']
+    else:
+        hostname = 'all'
+    if not isinstance(pageNo, str) or not isinstance(hostname, str):
+        raise TypeError('pageNo或navStatus页面传入参数不对')
+    else:
+        try:
+            pageNo = int(pageNo)
+            if pageNo < 0:
+                pageNo = 0
+        except ValueError as ve:
+            context = {'errMsg': 'pageNo参数不是int.'}
+            return render(request, 'error.html', context)
+
+    loginUser = request.session.get('login_username', False)
+    #backup_result model，根据pageNo和hostname获取对应的内容
+    offset = pageNo * PAGE_LIMIT
+    limit = offset + PAGE_LIMIT
+
+    listBackupServers = []
+    listBackupResult = []
+    #查询全部备份结果
+    loginUserOb = users.objects.get(username=loginUser)
+    if loginUserOb.is_superuser:
+        listBackupServers = backup_result.objects.values('hostname').distinct()
+        if hostname == 'all':
+            #这句话等同于select * from sql_backup_result order by start_time desc,hostname,port limit {offset, limit};
+            listBackupResult = backup_result.objects.order_by('-start_time', 'hostname', 'port')[offset:limit]
+        else:
+            listBackupResult = backup_result.objects.filter(hostname=hostname).order_by('-start_time', 'hostname', 'port')[offset:limit]
+    else:
+        context = {'errMsg': '当前用户权限不足！'}
+        return render(request, 'error.html', context)
+
+    context = {'currentMenu':'allBackupResult', 'listBackupResult':listBackupResult, 'pageNo':pageNo, 'hostname':hostname, 'PAGE_LIMIT':PAGE_LIMIT, 'listBackupServers':listBackupServers}
+    return render(request, 'backupCheck.html', context)

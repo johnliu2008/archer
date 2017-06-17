@@ -62,3 +62,25 @@ class workflow(models.Model):
     class Meta:
         verbose_name = u'工单管理'
         verbose_name_plural = u'工单管理'
+
+
+#存放备份结果
+class backup_result(models.Model):
+    hostname = models.CharField('主机名或IP地址', max_length=70)
+    port = models.IntegerField('端口号')
+    dbname = models.CharField('库名', max_length=60)
+    backup_tool = models.CharField('备份工具，如Xtrabackup, mysqldump，RMAN等', max_length=30)
+    backup_strategy = models.CharField('备份策略', max_length=12, choices=(('完全备份', '完全备份'),('增量备份', '增量备份')))
+    backup_result = models.CharField('备份结果', max_length=10, choices=(('成功', '成功'),('失败', '失败')))
+    start_time = models.DateTimeField('备份开始时间')
+    finish_time = models.DateTimeField('备份结束时间', null=True, blank=True)
+    duration = models.CharField('备份耗时', max_length=10, default="N/A")
+    input_size = models.CharField('输入大小，即数据库大小，单位不限', max_length=20)
+    output_size = models.CharField('输出大小，即备份集大小，单位不限', max_length=20)
+    comments = models.CharField('备注', max_length=500)
+
+    def __str__(self):
+        return self.hostname + '_' + str(self.port)
+    class Meta:
+        verbose_name = u'备份结果'
+        verbose_name_plural = u'备份结果'

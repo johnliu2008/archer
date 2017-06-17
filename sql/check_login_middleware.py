@@ -9,5 +9,5 @@ class CheckLoginMiddleware(object):
         """
         if request.session.get('login_username', False) in (False, '匿名用户'):
             #以下是不用跳转到login页面的url白名单
-            if request.path not in ('/login/', '/authenticate/') and re.match(r"/admin/\w*", request.path) is None:
+            if request.path not in ('/login/', '/authenticate/', '/backupAPI/') and re.match(r"/admin/\w*", request.path) is None:
                 return HttpResponseRedirect('/login/')
