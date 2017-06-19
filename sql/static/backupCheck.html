@@ -7,14 +7,14 @@
                 {% else %}
                 <li>
 				{% endif %}
-				<a href="/allBackupResult/?pageNo=0&hostname=all">全部结果</a></li>
-				{% for server in listBackupServers %}
-					{% if hostname == server.hostname %}
+				<a href="/allBackupResult/?pageNo=0&hostname=all&backupState=all">全部结果</a></li>
+				{% for state in listBackupState %}
+					{% if backup_result == state.backup_result %}
 						<li class="active">
 					{% else %}
 						<li>
 					{% endif %}
-				<a href="/allBackupResult/?pageNo=0&hostname={{server.hostname}}">{{server.hostname}}</a></li>
+				<a href="/allBackupResult/?pageNo=0&backupState={{state.backup_result}}&hostname=all">{{state.backup_result}}</a></li>
 				{% endfor %}
 
 			</ul>
@@ -63,7 +63,7 @@
 					{% for record in listBackupResult %}
 					<tr>
 						<td>
-							<a href="/allBackupResult/?pageNo=0&hostname={{record.hostname}}">{{record.hostname}}</a>
+							<a href="/allBackupResult/?pageNo=0&hostname={{record.hostname}}&backupState={{backupState}}">{{record.hostname}}</a>
 						</td>
 						<td>
 							{{record.port}}
@@ -120,26 +120,26 @@
 			<div style="text-align:center;">
 			<ul class="pagination" style="display:inline-block;">
 				<li>
-					 <a href="/allBackupResult/?pageNo={{pageNo|add:"-1"}}&hostname={{hostname}}">前一页</a>
+					 <a href="/allBackupResult/?pageNo={{pageNo|add:"-1"}}&hostname={{hostname}}&backupState={{backupState}}">前一页</a>
 				</li>
 				<li class="active">
-					 <a href="/allBackupResult/?pageNo={{pageNo|add:"0"}}&hostname={{hostname}}">{{pageNo|add:"1"}}</a>
+					 <a href="/allBackupResult/?pageNo={{pageNo|add:"0"}}&hostname={{hostname}}&backupState={{backupState}}">{{pageNo|add:"1"}}</a>
 				</li>
 				{% if listBackupResult|length >= PAGE_LIMIT %}
 				<li>
-					 <a href="/allBackupResult/?pageNo={{pageNo|add:"1"}}&hostname={{hostname}}">{{pageNo|add:"2"}}</a>
+					 <a href="/allBackupResult/?pageNo={{pageNo|add:"1"}}&hostname={{hostname}}&backupState={{backupState}}">{{pageNo|add:"2"}}</a>
 				</li>
 				<li>
-					 <a href="/allBackupResult/?pageNo={{pageNo|add:"2"}}&hostname={{hostname}}">{{pageNo|add:"3"}}</a>
+					 <a href="/allBackupResult/?pageNo={{pageNo|add:"2"}}&hostname={{hostname}}&backupState={{backupState}}">{{pageNo|add:"3"}}</a>
 				</li>
 				<li>
-					 <a href="/allBackupResult/?pageNo={{pageNo|add:"3"}}&hostname={{hostname}}">{{pageNo|add:"4"}}</a>
+					 <a href="/allBackupResult/?pageNo={{pageNo|add:"3"}}&hostname={{hostname}}&backupState={{backupState}}">{{pageNo|add:"4"}}</a>
 				</li>
 				<li>
-					 <a href="/allBackupResult/?pageNo={{pageNo|add:"4"}}&hostname={{hostname}}">{{pageNo|add:"5"}}</a>
+					 <a href="/allBackupResult/?pageNo={{pageNo|add:"4"}}&hostname={{hostname}}&backupState={{backupState}}">{{pageNo|add:"5"}}</a>
 				</li>
 				<li>
-					 <a href="/allBackupResult/?pageNo={{pageNo|add:"1"}}&hostname={{hostname}}">后一页</a>
+					 <a href="/allBackupResult/?pageNo={{pageNo|add:"1"}}&hostname={{hostname}}&backupState={{backupState}}">后一页</a>
 				</li>
 				{% endif %}
 			</ul>

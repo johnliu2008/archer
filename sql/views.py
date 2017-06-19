@@ -415,6 +415,7 @@ def allBackupResult(request):
     PAGE_LIMIT = 12
 
     pageNo = 0
+    backupState = ''
     hostname = ''
 
     #参数检查
@@ -423,11 +424,16 @@ def allBackupResult(request):
     else:
         pageNo = '0'
 
+    if 'backupState' in request.GET:
+        backupState = request.GET['backupState']
+    else:
+        backupState = 'all'
+
     if 'hostname' in request.GET:
         hostname = request.GET['hostname']
     else:
         hostname = 'all'
-    if not isinstance(pageNo, str) or not isinstance(hostname, str):
+    if not isinstance(pageNo, str) or not isinstance(backupState, str) or not isinstance(hostname, str):
         raise TypeError('pageNo或navStatus页面传入参数不对')
     else:
         try:
@@ -448,15 +454,20 @@ def allBackupResult(request):
     #查询全部备份结果
     loginUserOb = users.objects.get(username=loginUser)
     if loginUserOb.is_superuser:
-        listBackupServers = backup_result.objects.values('hostname').distinct()
-        if hostname == 'all':
+        # listBackupServers = backup_result.objects.values('hostname').distinct()
+        listBackupState = backup_result.objects.values('backup_result').distinct()
+        if backupState == 'all' and hostname == 'all':
             #这句话等同于select * from sql_backup_result order by start_time desc,hostname,port limit {offset, limit};
             listBackupResult = backup_result.objects.order_by('-start_time', 'hostname', 'port')[offset:limit]
-        else:
+        elif backupState == 'all':
             listBackupResult = backup_result.objects.filter(hostname=hostname).order_by('-start_time', 'hostname', 'port')[offset:limit]
+        elif hostname == 'all':
+            listBackupResult = backup_result.objects.filter(backup_result=backupState).order_by('-start_time', 'hostname', 'port')[offset:limit]
+        else:
+            listBackupResult = backup_result.objects.filter(backup_result=backupState).filter(hostname=hostname).order_by('-start_time', 'hostname', 'port')[offset:limit]
     else:
         context = {'errMsg': '当前用户权限不足！'}
         return render(request, 'error.html', context)
 
-    context = {'currentMenu':'allBackupResult', 'listBackupResult':listBackupResult, 'pageNo':pageNo, 'hostname':hostname, 'PAGE_LIMIT':PAGE_LIMIT, 'listBackupServers':listBackupServers}
+    context = {'currentMenu':'allBackupResult', 'listBackupResult':listBackupResult, 'pageNo':pageNo, 'backupState':backupState, 'hostname':hostname, 'PAGE_LIMIT':PAGE_LIMIT, 'listBackupState':listBackupState}
     return render(request, 'backupCheck.html', context)
