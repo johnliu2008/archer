@@ -24,6 +24,7 @@ linux : 64位linux操作系统均可
 * 可通过django admin进行匹配SQL关键字的工单搜索
 * 发起SQL上线，可配置的邮件提醒审核人进行审核
 * 在发起SQL上线前，自助SQL审核，给出建议
+* 审核通过正在执行中的工单，如果是由pt-OSC执行的SQL会显示执行进度，并且可以点击中止pt-OSC进程<br/>
 
 ### 设计规范：
 * 合理的数据库设计和规范很有必要，尤其是MySQL数据库，内核没有oracle、db2、SQL Server等数据库这么强大，需要合理设计，扬长避短。互联网业界有成熟的MySQL设计规范，特此撰写如下。请读者在公司上线使用archer系统之前由专业DBA给所有后端开发人员培训一下此规范，做到知其然且知其所以然。<br/>
@@ -45,7 +46,7 @@ cd Python-3.4.1 <br/>
 3. 安装所需相关模块：<br/>
 (1)django：<br/>
 tar -xzvf Django-1.8.17 && cd Django-1.8.17 && python3 setup.py install<br/>
-或者pip3 install Django==1.8.17
+或者pip3 install Django==1.8.17<br/>
 (2)Crypto:<br/>
 pip3 install Crypto<br/>
 pip3 install pycrypto
@@ -71,40 +72,17 @@ python3 manage.py migrate<br/>
 (2)远程备份库授权<br/>
 7. 创建admin系统root用户（该用户可以登录django admin来管理model）：<br/>
 cd archer && python3 manage.py createsuperuser<br/>
-8. 启动：<br/>
-用django内置runserver启动服务,需要修改debug.sh里的ip和port<br/>
-cd archer && bash debug.sh<br/>
-如果要用gunicorn启动服务的话，可以使用pip3 install gunicorn安装并用startup.sh启动，但需要配合nginx处理静态资源.<br/>
-  8.1 gunicorn的安装配置示例：<br/>
-  pip3 install gunicorn<br/>
-  cat startup.sh  #gunicorn启动脚本<br/>
-  #!/bin/bash<br/>
-  settings=${1:-"archer.settings"}<br/>
-  ip=${2:-"192.168.1.21"}<br/>
-  port=${3:-9124} #记住这个端口，配置nginx或apache代理时，指向的是这个端口<br/>
-  gunicorn -w 4 --env DJANGO_SETTINGS_MODULE=${settings} --error-logfile=/tmp/archer.err -b ${ip}:${port} archer.wsgi:application  --timeout 1200 -D #timeout要根据实际情况来设置，单位为秒，如果要对大表进行操作，这个值要适当加大<br/>
-  <br/>
-  8.2 nginx配置示例<br/>
-  cat nginx.conf <br/>
-   #部分省略<br/>
-  server {  <br/>
-     listen 9123;  #监听端口<br/>
-     server_name archer;     <br/>
-     client_header_timeout 1200; #超时时间与gunicorn超时时间设置一致 <br/>
-     client_body_timeout 1200;<br/>
-     proxy_read_timeout 1200;<br/>
-     location / {   <br/>
-         proxy_set_header Host $http_host;   #proxy_set_header 这3条配置必填 <br/>
-         proxy_set_header X-Real-IP $remote_addr; <br/>
-         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for; <br/>
-         proxy_pass http://192.168.1.21:9124;  <br/>
-     }  <br/>
-	location /static {    <br/>
-       alias  /app/archer/archer/sql/static;  #此处指向static目录的绝对路径，以便nginx收集静态资源   <br/>
-    }   <br/>
-}  <br/>
-  #部分省略  <br/>
-  <br/>
+8. 启动，有两种方式：<br/>
+(1)用django内置runserver启动服务,需要修改debug.sh里的ip和port<br/>
+    cd archer && bash debug.sh<br/>
+(2)用gunicorn启动服务，可以使用pip3 install gunicorn安装并用startup.sh启动，但需要配合nginx处理静态资源. (nginx安装这里不做示范)<br/>
+    * gunicorn的安装配置示例:
+        * pip3 install gunicorn
+	    * cat startup.sh
+            * ![image](https://github.com/jly8866/archer/raw/master/screenshots/startup.png)<br/>
+    * nginx配置示例：
+        * cat nginx.conf
+            * ![image](https://github.com/jly8866/archer/raw/master/screenshots/nginx.png)<br/>
 9. 创建archer系统登录用户：<br/>
 使用浏览器（推荐chrome或火狐）访问debug.sh里的地址：http://X.X.X.X:port/admin/sql/users/ ，如果未登录需要用到步骤7创建的admin系统用户来登录。<br/>
 点击右侧Add users，用户名密码自定义，至少创建一个工程师和一个审核人（步骤7创建的用户也可以登录）后续新的工程师和审核人用户请用LDAP导入sql_users表或django admin增加<br/>
@@ -113,6 +91,12 @@ cd archer && bash debug.sh<br/>
 这一步是为了告诉archer你要用inception去哪些mysql主库里执行SQL，所用到的用户名密码、端口等。<br/>
 11. 正式访问：<br/>
 以上步骤完毕，就可以使用步骤9创建的用户登录archer系统啦, 首页地址 http://X.X.X.X:port/<br/>
+
+### 已经制作好的docker镜像：
+* 如果不想自己安装上述，可以直接使用做好的docker镜像，安装步骤：
+    1. docker run -p 80:80 -d docker.gaoxiaobang.com/prod/archer    (需要确保docker宿主机80端口能够使用)
+    2. 浏览器直接访问http://宿主机ip:80/ 即可
+* docker镜像制作感谢@浩气冲天 协助
 
 ### 系统展示截图：
 1. 工单展示页：<br/>
@@ -129,7 +113,7 @@ cd archer && bash debug.sh<br/>
 ![image](https://github.com/jly8866/archer/raw/master/screenshots/adminsqlusers.png)<br/>
 7. 工单统计图表：<br/>
 ![image](https://github.com/jly8866/archer/raw/master/screenshots/charts.png)<br/><br/>
-8.pt-OSC进度条，以及中止pt-OSC进程按钮：<br/>
+8.pt-osc进度条，以及中止pt-osc进程按钮：<br/>
 ![image](https://raw.githubusercontent.com/johnliu2008/archer/master/screenshots/osc_progress.png)<br/>
 
 ### 联系方式：
@@ -141,4 +125,5 @@ QQ群：524233225
 ![image](https://github.com/jly8866/archer/raw/master/screenshots/bugs/bug2.png)<br/>
 原因：python3的pymysql模块会向inception发送SHOW WARNINGS语句，导致inception返回一个"Must start as begin statement"错误被archer捕捉到报在日志里.<br/>
 解决：如果实在忍受不了，请修改/path/to/python3/lib/python3.4/site-packages/pymysql/cursors.py:338行，将self._show_warnings()这一句注释掉，换成pass，如下：<br/>
-![image](https://github.com/jly8866/archer/raw/master/screenshots/bugs/bug3.png)
+![image](https://github.com/jly8866/archer/raw/master/screenshots/bugs/bug3.png)<br/>
+但是此方法有副作用，会导致所有调用该pymysql模块的程序不能show warnings，因此强烈推荐使用virtualenv或venv环境！

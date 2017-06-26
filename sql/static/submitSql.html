@@ -6,6 +6,7 @@
 
 	<form id="form-submitsql" action="/autoreview/" method="post" class="form-horizontal" role="form">
 		{% csrf_token %}
+        <input type="hidden" id="workflowid" name="workflowid"/>
 		<div class="col-md-8 column">
 			<textarea id="sql_content" name="sql_content" class="form-control" data-name="SQL内容" placeholder="请在此提交SQL，请以分号结尾。例如：use test; create table t1(id int)engine=innodb;" rows=20 required></textarea>
 		</div>
@@ -43,6 +44,38 @@
 					{% endfor %}
 					</select>
 				</div>
+                <!--增加副审核人选项-->
+                <div class="form-group">
+                    <div class="panel-group" id="accordion">
+                        <div class="panel panel-default">
+                            <div class="panel-heading">
+                                <h4 class="panel-title">
+                                    <a data-toggle="collapse"
+                                    data-parent="#accordion"
+                                       href="#collapseOne">
+                                        <i class="glyphicon-plus
+                                        glyphicon"></i>
+                                        增加副审核人（可选)
+                                    </a>
+                                </h4>
+                            </div>
+                            <div id="collapseOne" class="panel-collapse
+                            collapse">
+                                <div class="panel-body" style="margin-left:
+                                25px">
+                                    {% for man in reviewMen %}
+                                        <div class="radio" id="{{ man }}">
+                                            <input type="radio" id="radio1"
+                                            name="sub_review_man" value="{{ man }}" />
+                                            <label for="radio1"> {{ man }}
+                                            </label>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 				<div class="form-group">
                     <input type="button" id="btn-autoreview" class="btn btn-info btn-lg" value="SQL检测" />
                     <button type="reset" class="btn btn-warning">清空选项</button>
@@ -60,5 +93,13 @@
 		</div>
 	</div>
 </div>
-</div>	
+</div>
+<script type="text/javascript">
+    var pathname = window.location.pathname;
+    if (pathname == "/editsql/") {
+        document.getElementById('workflowid').value = sessionStorage.getItem('editWorkflowDetailId');
+        document.getElementById('workflow_name').value = sessionStorage.getItem('editWorkflowNname');
+        document.getElementById('sql_content').value = sessionStorage.getItem('editSqlContent');
+    }
+</script>
 {% endblock content %}
