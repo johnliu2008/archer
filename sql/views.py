@@ -20,6 +20,7 @@ from .sendmail import MailSender
 from .inception import InceptionDao
 from .aes_decryptor import Prpcrypt
 from .models import users, master_config, workflow, backup_result
+from .views_ajax import loginAuthenticate
 
 dao = Dao()
 inceptionDao = InceptionDao()
@@ -373,8 +374,13 @@ def rollback(request):
         return render(request, 'error.html', context)
     workflowId = int(workflowId)
     listBackupSql = inceptionDao.getRollbackSqlList(workflowId)
+    workflowDetail = workflow.objects.get(id=workflowId)
+    workflowName = workflowDetail.workflow_name
+    rollbackWorkflowName = "【回滚工单】原工单Id:%s ,%s" % (workflowId, workflowName)
+    cluster_name = workflowDetail.cluster_name
+    review_man = workflowDetail.review_man
 
-    context = {'listBackupSql':listBackupSql}
+    context = {'listBackupSql':listBackupSql, 'workflowDetail':workflowDetail, 'rollbackWorkflowName':rollbackWorkflowName, 'cluster_name':cluster_name, 'review_man':review_man}
     return render(request, 'rollback.html', context)
 
 #SQL审核必读
@@ -413,32 +419,26 @@ def _getDetailUrl(request):
 def backupAPI(request):
     if request.method == 'POST':
         received_json_data = json.loads(request.body.decode("utf-8"))
-        if "id" in received_json_data:
-            #比对客户端传来的校验值是否正确。这里只是简单地计算json串里面除["id"]之外的所有的value的字符串长度之和，与["id"]的value是否相等
-            checksum = received_json_data["id"]
-            received_json_data.pop("id")
-            string_temp = ''
-            for value in received_json_data.values():
-                string_temp += str(value)
-            if checksum == len(string_temp) and len(received_json_data) == 11:
-                new_backup_result = backup_result()
-                new_backup_result.hostname = received_json_data["hostname"]
-                new_backup_result.port = received_json_data["port"]
-                new_backup_result.dbname = received_json_data["dbname"]
-                new_backup_result.backup_tool = received_json_data["backup_tool"]
-                new_backup_result.backup_strategy = received_json_data["backup_strategy"]
-                new_backup_result.backup_result = received_json_data["backup_result"]
-                new_backup_result.start_time = datetime.datetime.strptime(received_json_data["start_time"], "%Y-%m-%dT%X")
-                new_backup_result.finish_time = datetime.datetime.strptime(received_json_data["finish_time"], "%Y-%m-%dT%X")
-                duration = (datetime.datetime.strptime(received_json_data["finish_time"], "%Y-%m-%dT%X") - datetime.datetime.strptime(received_json_data["start_time"], "%Y-%m-%dT%X")).__str__()
-                new_backup_result.duration = duration
-                new_backup_result.input_size = received_json_data["input_size"]
-                new_backup_result.output_size = received_json_data["output_size"]
-                new_backup_result.comments = received_json_data["comments"]
-                new_backup_result.save()
-                context = {'Msg': 'Completed!'}
-            else:
-                context = {'Msg': '非法请求'}
+        username = received_json_data["username"]
+        password = received_json_data["password"]
+        result = loginAuthenticate(username, password)
+        if result["status"] == 0:
+            new_backup_result = backup_result()
+            new_backup_result.hostname = received_json_data["hostname"]
+            new_backup_result.port = received_json_data["port"]
+            new_backup_result.dbname = received_json_data["dbname"]
+            new_backup_result.backup_tool = received_json_data["backup_tool"]
+            new_backup_result.backup_strategy = received_json_data["backup_strategy"]
+            new_backup_result.backup_result = received_json_data["backup_result"]
+            new_backup_result.start_time = datetime.datetime.strptime(received_json_data["start_time"], "%Y-%m-%dT%X")
+            new_backup_result.finish_time = datetime.datetime.strptime(received_json_data["finish_time"], "%Y-%m-%dT%X")
+            duration = (datetime.datetime.strptime(received_json_data["finish_time"], "%Y-%m-%dT%X") - datetime.datetime.strptime(received_json_data["start_time"], "%Y-%m-%dT%X")).__str__()
+            new_backup_result.duration = duration
+            new_backup_result.input_size = received_json_data["input_size"]
+            new_backup_result.output_size = received_json_data["output_size"]
+            new_backup_result.comments = received_json_data["comments"]
+            new_backup_result.save()
+            context = {'Msg': 'Completed!'}
         else:
             context = {'Msg': '非法请求'}
     else:
