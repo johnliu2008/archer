@@ -414,6 +414,11 @@ def _getDetailUrl(request):
     host = request.META['HTTP_HOST']
     return "%s://%s/detail/" % (scheme, host)
 
+
+
+
+
+
 #接收服务器传来的备份结果
 @csrf_exempt
 def backupAPI(request):
