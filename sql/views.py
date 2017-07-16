@@ -383,11 +383,7 @@ def rollback(request):
     cluster_name = workflowDetail.cluster_name
     review_man = workflowDetail.review_man
 
-<<<<<<< HEAD
     context = {'listBackupSql':listBackupSql, 'rollbackWorkflowName':rollbackWorkflowName, 'cluster_name':cluster_name, 'review_man':review_man}
-=======
-    context = {'listBackupSql':listBackupSql, 'workflowDetail':workflowDetail, 'rollbackWorkflowName':rollbackWorkflowName, 'cluster_name':cluster_name, 'review_man':review_man}
->>>>>>> fff6886f65180686376058b4a25367815103e654
     return render(request, 'rollback.html', context)
 
 #SQL审核必读

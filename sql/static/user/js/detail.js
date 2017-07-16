@@ -50,7 +50,6 @@ function get_pct(wid, sqlNum){
             }
      }
     else {
-<<<<<<< HEAD
         if (isStoped == 1) {
             document.getElementById("btnstop_" + sqlNum).style.display = "none";
             return false;
@@ -133,113 +132,6 @@ function get_pct(wid, sqlNum){
             }
         });
     }
-=======
-
-         if (isStoped == 1) {
-             document.getElementById("btnstop_" + sqlNum).style.display = "none";
-             return false;
-         }
-         var pct;
-         $.ajax({
-             type: "post",
-             async: false,
-             url: "/getOscPercent/",
-             dataType: "json",
-             data: {
-                 workflowid: wid,
-                 sqlID: sqlNum
-             },
-             complete: function () {
-             },
-             success: function (data) {
-                  //console.log(data);
-                 if (data.status == 4) {
-                     // 不是由pt-OSC执行的，比如DML语句
-                     pct = "N/A";
-                     document.getElementById("td_" + sqlNum).innerHTML = "不由pt-OSC执行";
-                     itemIndex++;
-                     executing = 0;
-                     clearTimeout(key);
-                     key = setTimeout(function () {
-                         get_pct(wid, itemIndex);
-                     }, 1000)
-                 }
-                 else if (data.status == 1) {
-                     // 该行SQL有应对的SHA1值，说明该SQL会由pt-OSC执行，但是到inception查询不到它的进度信息；有2种情况：
-                     // 1.正在执行DML语句，inception实际还未执行到这一行，只是本js轮循到这一行了而已
-                     // 2.已执行完毕
-                     if (executing == 0) {
-                         //第1种情况,这里进行5次重试，每次间隔1秒
-                         if (retryCnt <= 5) {
-                             clearTimeout(key);
-                             document.getElementById("div_" + sqlNum).className = "progress";
-                             document.getElementById("div_" + sqlNum).style.width = "100%";
-                             document.getElementById("span_" + sqlNum).innerHTML = "查询中...";
-                             key = setTimeout(function () {
-                                 get_pct(wid, itemIndex);
-                             }, 1000);
-                             //console.log("retryCnt: " + retryCnt + ",itemIndex: " + itemIndex);
-                             retryCnt++;
-                         } else {
-                             retryCnt = 1;
-                             itemIndex++;
-                             executing = 0;
-                             // console.log('===>' + itemIndex);
-                             pct = 100;
-                             document.getElementById("span_" + sqlNum).innerHTML = pct + "%";
-                             document.getElementById("div_" + sqlNum).className = "progress-bar";
-                             get_pct(wid, itemIndex);
-                             // console.log('per:' + pct);
-                         }
-                     }else{
-                         //第2种情况
-                         document.getElementById("btnstop_" + sqlNum).style.display = "none";
-                         itemIndex++;
-                         executing = 0;
-                         pct = 100;
-                         document.getElementById("div_" + sqlNum).style.width = pct + "%";
-                         document.getElementById("span_" + sqlNum).innerHTML = pct + "%";
-                         get_pct(wid, itemIndex);
-                     }
-                 }
-                 else if (data.status == 0) {
-                     // 在inception能查询到它的进度信息，说明正在执行
-                     pct = data.data.percent;
-                     // console.log('per:' + pct);
-                     document.getElementById("div_" + sqlNum).className = "progress-bar";
-                     document.getElementById("div_" + sqlNum).style.width = pct + "%";
-                     document.getElementById("span_" + sqlNum).innerHTML = pct + "%";
-                     executing = 1;
-                     if (pct == 100) {
-                         document.getElementById("btnstop_" + sqlNum).style.display = "none";
-                         itemIndex++;
-                         executing = 0;
-                         clearTimeout(key);
-                         key = setTimeout(function () {
-                             get_pct(wid, itemIndex);
-                         }, 800)
-                     } else {
-                         document.getElementById("btnstop_" + sqlNum).style.display = "";
-                         clearTimeout(key);
-                         key = setTimeout(function () {
-                             get_pct(wid, sqlNum);
-                         }, 800)
-                     }
-
-                 }
-                 else {
-                     alert(data.msg);
-                     return;
-                 }
-
-             },
-             error: function (XMLHttpRequest, textStatus, errorThrown) {
-                 alert(errorThrown);
-             }
-         });
-         return pct;
-     }
->>>>>>> fff6886f65180686376058b4a25367815103e654
 }
 
 function stopOsc(wid, sqlNum){
