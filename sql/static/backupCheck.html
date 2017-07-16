@@ -2,14 +2,14 @@
 
 {% block content %}
 			<ul class="nav nav-tabs">
-				{% if hostname == 'all' %}
+				{% if backupState == 'all' %}
 				<li class="active">
                 {% else %}
                 <li>
 				{% endif %}
 				<a href="/allBackupResult/?pageNo=0&hostname=all&backupState=all">全部结果</a></li>
 				{% for state in listBackupState %}
-					{% if backup_result == state.backup_result %}
+					{% if backupState == state.backup_result %}
 						<li class="active">
 					{% else %}
 						<li>
@@ -97,7 +97,7 @@
 							{{record.input_size}}
 						</td>
 						<td>
-							{{record.input_size}}
+							{{record.output_size}}
 						</td>
 						<td>
 							{{record.comments}}
