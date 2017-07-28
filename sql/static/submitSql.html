@@ -31,8 +31,8 @@
 				</div>
 				<div class="form-group">
 					<select id="is_backup" name="is_backup" class="selectpicker show-tick form-control bs-select-hidden" data-name="是否选择备份" data-placeholder="请选择是否要备份:" required>
-          				<option value="is-empty" disabled="">请选择是否要备份:</option>
-          				<option value="是" selected="selected">是</option>
+          				<option value="is-empty" disabled="" selected="selected">请选择是否要备份:</option>
+          				<option value="是">是</option>
           				<option value="否">否</option>
         			</select>	
 				</div>
@@ -82,8 +82,8 @@
                     <!-- <button type="submit" class="btn btn-primary">SQL提交</button> -->
                     <input id="btn-submitsql" type="button" class="btn btn-primary" value="SQL提交" />
 				</div>
+			</div>
 	</form>
-		</div>
 	</div>
 
 	<div id="inception-result" style="display:none;" class="row clearfix">
@@ -93,12 +93,4 @@
 		</div>
 	</div>
 </div>
-<script type="text/javascript">
-    var pathname = window.location.pathname;
-    if (pathname == "/editsql/") {
-        document.getElementById('workflowid').value = sessionStorage.getItem('editWorkflowDetailId');
-        document.getElementById('workflow_name').value = sessionStorage.getItem('editWorkflowNname');
-        document.getElementById('sql_content').value = sessionStorage.getItem('editSqlContent');
-    }
-</script>
 {% endblock content %}
